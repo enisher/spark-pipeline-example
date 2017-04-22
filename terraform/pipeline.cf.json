@@ -1,0 +1,136 @@
+{
+  "Resources": {
+    "DataPipeline": {
+      "Type": "AWS::DataPipeline::Pipeline",
+      "Properties": {
+        "Activate": true,
+        "Description": "",
+        "Name": "${pipeline_name}",
+        "PipelineObjects": [
+          {
+            "Id": "Default",
+            "Name": "Default",
+            "Fields": [
+              {
+                "Key": "type",
+                "StringValue": "Default"
+              },
+              {
+                "Key": "role",
+                "StringValue": "data-pipeline-role"
+              },
+              {
+                "Key": "resourceRole",
+                "StringValue": "data_pipeline_instance_profile"
+              },
+              {
+                "Key": "pipelineLogUri",
+                "StringValue": "s3://${s3_location_for_logs}"
+              },
+              {
+                "Key": "failureAndRerunMode",
+                "StringValue": "CASCADE"
+              },
+              {
+                "Key": "scheduleType",
+                "StringValue": "cron"
+              },
+              {
+                "Key": "schedule",
+                "RefValue": "Schedule"
+              },
+              {
+                "Key": "maximumRetries",
+                "StringValue": "0"
+              }
+            ]
+          },
+          {
+            "Id": "Schedule",
+            "Name": "Schedule",
+            "Fields": [
+              {
+                "Key": "type",
+                "StringValue": "Schedule"
+              },
+              {
+                "Key": "startAt",
+                "StringValue": "FIRST_ACTIVATION_DATE_TIME"
+              },
+              {
+                "Key": "period",
+                "StringValue": "${period}"
+              }
+            ]
+          },
+          {
+            "Id": "SparkCluster",
+            "Name": "SparkCluster",
+            "Fields": [
+              {
+                "Key": "type",
+                "StringValue": "EmrCluster"
+              },
+              {
+                "Key": "releaseLabel",
+                "StringValue": "emr-5.2.1"
+              },
+              {
+                "Key": "coreInstanceCount",
+                "StringValue": "${cluster_core_instences_count}"
+              },
+              {
+                "Key": "applications",
+                "StringValue": "spark"
+              },
+              {
+                "Key": "applications",
+                "StringValue": "ganglia"
+              },
+              {
+                "Key": "subnetId",
+                "StringValue": "${subnet}"
+              },
+              {
+                "Key": "terminateAfter",
+                "StringValue": "4 Hours"
+              },
+              {
+                "Key": "keyPair",
+                "StringValue": "master"
+              },
+              {
+                "Key": "bootstrapAction",
+                "StringValue": "${bootstrap_script_location}"
+              }
+            ]
+          },
+          {
+            "Id": "SparkActivity",
+            "Name": "SparkActivity",
+            "Fields": [
+              {
+                "Key": "type",
+                "StringValue": "EmrActivity"
+              },
+              {
+                "Key": "runsOn",
+                "RefValue": "SparkCluster"
+              },
+              {
+                "Key": "step",
+                "StringValue": "command-runner.jar,spark-submit,--deploy-mode,client,--master,yarn,--class,spark.example.ClusterMain,/home/hadoop/spark-pipeline-example_backup.jar,--run,s3://run-it-spark/input/,s3://run-it-spark/dp-out/"
+              }
+            ]
+          }
+        ],
+        "ParameterObjects": [
+        ],
+        "ParameterValues": [
+        ],
+        "PipelineTags": [
+        ]
+      }
+    }
+  }
+}
